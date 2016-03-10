@@ -170,7 +170,7 @@ public class BlockExplorerTest {
 			
 			String addr = addrs.get(i);
 		
-			Map<Object, Map> output = BlockExplorer.getInstance().jsonQueryAddress(addr, start, txOnPage, filter, allOnOnePage, withoutBlocks, showOnly, showWithout);
+			Map<Object, Map> output = BlockExplorer.getInstance().jsonQueryAddress(addrs, start, txOnPage, filter, allOnOnePage, showOnly, showWithout);
 	
 			Map<Object, Map> totalBalance = output.get("totalBalance");
 			
