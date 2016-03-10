@@ -1,0 +1,10 @@
+Mar 10, 2016 1:12:09 PM network.ConnectionCreator run
+INFO: Connecting to peer 2.95.115.87 proposed by 188.166.16.64 :: 2 / 20 / 20 :: Connections: 4
+java.lang.ClassCastException: org.mapdb.Fun$3 cannot be cast to java.lang.Integer
+        at database.ATMap.deleteAllAfterHeight(ATMap.java:299)
+        at qora.Synchronizer.synchronize(Synchronizer.java:87)
+        at qora.Synchronizer.synchronize(Synchronizer.java:211)
+        at controller.Controller.update(Controller.java:1020)
+        at qora.BlockGenerator.run(BlockGenerator.java:175)
+Mar 10, 2016 1:12:24 PM network.Network onError
+WARNING: Connection error : /188.166.16.64 : org.mapdb.Fun$3 cannot be cast to java.lang.Integer

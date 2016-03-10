@@ -1,0 +1,1 @@
+java -cp "bin/;.;libs/*;libs/jetty/*;libs/jersey/api/*;libs/jersey/ext/*;libs/jersey/lib/*" Start
