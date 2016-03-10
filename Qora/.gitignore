@@ -1,7 +1,7 @@
-/data
+/data*
 /Data Files
-/wallet
-/ACCOUNTS.txt
-/settings.ini
+/wallet*
 /bin/
-/dataBak/
+/languages/
+settings.json
+peers.json

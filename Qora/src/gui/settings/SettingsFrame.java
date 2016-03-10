@@ -1,5 +1,6 @@
 package gui.settings;
 
+import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.Image;
@@ -9,16 +10,13 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -26,9 +24,10 @@ import org.json.simple.JSONObject;
 import controller.Controller;
 import gui.Menu;
 import lang.Lang;
+import lang.LangFile;
 import network.Network;
 import settings.Settings;
-import utils.JSonWriter;
+import utils.SaveStrToFile;
 
 @SuppressWarnings("serial")
 public class SettingsFrame extends JFrame{
@@ -54,34 +53,29 @@ public class SettingsFrame extends JFrame{
 		settingsJSONbuf = new JSONObject();
 		settingsJSONbuf = Settings.getInstance().Dump(); 
 		
-		GridBagLayout gridBagLayout = new GridBagLayout();
-        gridBagLayout.columnWidths = new int[]{339, 0};
-        gridBagLayout.rowHeights = new int[] {300, 30};
-        gridBagLayout.columnWeights = new double[]{1.0, Double.MIN_VALUE};
-        gridBagLayout.rowWeights = new double[]{0.0, 1.0};
-        getContentPane().setLayout(gridBagLayout);
+		this.setLayout(new GridBagLayout());
+
+	    //////////
+		//SETTINGS TABPANE
+		this.settingsTabPane = new SettingsTabPane();
+        GridBagConstraints gbc_tabPane = new GridBagConstraints();
+        gbc_tabPane.gridwidth = 4;
+        gbc_tabPane.fill = GridBagConstraints.BOTH;
+        gbc_tabPane.anchor = GridBagConstraints.NORTHWEST;
+        gbc_tabPane.insets = new Insets(0, 0, 0, 0);
+        gbc_tabPane.gridx = 0;
+        gbc_tabPane.gridy = 0;
         
-        JPanel panel = new JPanel();
-        GridBagConstraints gbc_panel = new GridBagConstraints();
-        gbc_panel.fill = GridBagConstraints.BOTH;
-        gbc_panel.gridx = 0;
-        gbc_panel.gridy = 1;
-        getContentPane().add(panel, gbc_panel);
-        GridBagLayout gbl_panel = new GridBagLayout();
-        gbl_panel.columnWidths = new int[] {80, 80, 80, 80, 80, 80};
-        gbl_panel.rowHeights = new int[]{23, 0};
-        gbl_panel.columnWeights = new double[]{0.0, 0.0, 0.0, 0.0, 0.0, Double.MIN_VALUE};
-        gbl_panel.rowWeights = new double[]{0.0, Double.MIN_VALUE};
-        panel.setLayout(gbl_panel);
+        this.add(this.settingsTabPane, gbc_tabPane); 
         
         JButton btnNewButton = new JButton(Lang.getInstance().translate("Apply"));
         GridBagConstraints gbc_btnNewButton = new GridBagConstraints();
-        gbc_btnNewButton.gridwidth = 2;
-        gbc_btnNewButton.fill = GridBagConstraints.BOTH;
-        gbc_btnNewButton.anchor = GridBagConstraints.NORTHWEST;
-        gbc_btnNewButton.insets = new Insets(3, 0, 0, 3);
-        gbc_btnNewButton.gridx = 1;
-        gbc_btnNewButton.gridy = 0;
+        gbc_btnNewButton.fill = GridBagConstraints.NONE;
+        gbc_btnNewButton.anchor = GridBagConstraints.EAST;
+        gbc_btnNewButton.insets = new Insets(5, 5, 5, 5);
+        gbc_btnNewButton.gridx = 0;
+        gbc_btnNewButton.gridy = 1;
+        gbc_btnNewButton.weightx = 2;
         
         btnNewButton.addActionListener(new ActionListener()
 		{
@@ -106,16 +100,19 @@ public class SettingsFrame extends JFrame{
 				}
 			}
 		});	  
-        
-        panel.add(btnNewButton, gbc_btnNewButton);
+        btnNewButton.setPreferredSize(new Dimension(100, 25));
+
+        this.add(btnNewButton, gbc_btnNewButton);
         
         JButton btnCancel = new JButton(Lang.getInstance().translate("Cancel"));
         GridBagConstraints gbc_btnCancel = new GridBagConstraints();
-        gbc_btnCancel.gridwidth = 2;
-        gbc_btnCancel.fill = GridBagConstraints.BOTH;
-        gbc_btnCancel.insets = new Insets(3, 0, 0, 0);
+        gbc_btnCancel.fill = GridBagConstraints.NONE;
+        gbc_btnCancel.anchor = GridBagConstraints.WEST;
+        gbc_btnCancel.insets = new Insets(5, 5, 5, 5);
         gbc_btnCancel.gridx = 3;
-        gbc_btnCancel.gridy = 0;
+        gbc_btnCancel.gridy = 1;
+        gbc_btnCancel.weightx = 2;
+
         btnCancel.addActionListener(new ActionListener()
 		{
 			public void actionPerformed(ActionEvent e)
@@ -126,12 +123,12 @@ public class SettingsFrame extends JFrame{
                 setVisible(false);
                 dispose();
 			}
-		});	  
-        panel.add(btnCancel, gbc_btnCancel);
-        //////////
-		//SETTINGS TABPANE
-        this.settingsTabPane = new SettingsTabPane();
-		
+		});
+        
+        btnCancel.setPreferredSize(new Dimension(100, 25));
+
+        this.add(btnCancel, gbc_btnCancel);
+    	
 		//ON CLOSE
 		this.addWindowListener(new WindowAdapter()
 		{
@@ -146,21 +143,11 @@ public class SettingsFrame extends JFrame{
             }
         });
 		       
-		 //ADD GENERAL TABPANE TO FRAME
-        this.add(this.settingsTabPane); 
-  
-        /////////
-        //SHOW FRAME
+		//SHOW FRAME
         this.pack();
         this.setLocationRelativeTo(null);
-        
-        
         this.setVisible(true);
 	}	
-	public void onClose()
-	{
-		
-	}
 	
 	@SuppressWarnings("unchecked")
 	public boolean saveSettings()
@@ -282,11 +269,9 @@ public class SettingsFrame extends JFrame{
 		}
 		
 		if(!Settings.getInstance().getLang().equals(
-				settingsTabPane.settingsParametersPanel.listOfAvailableLangs.get(
-						settingsTabPane.settingsParametersPanel.cbxListOfAvailableLangs.getSelectedIndex()).getA()))
+				((LangFile)settingsTabPane.settingsParametersPanel.cbxListOfAvailableLangs.getSelectedItem()).getFileName()))
 		{
-			settingsJSONbuf.put("lang", settingsTabPane.settingsParametersPanel.listOfAvailableLangs.get(
-					settingsTabPane.settingsParametersPanel.cbxListOfAvailableLangs.getSelectedIndex()).getA());
+			settingsJSONbuf.put("lang", ((LangFile)settingsTabPane.settingsParametersPanel.cbxListOfAvailableLangs.getSelectedItem()).getFileName());
 			changeLang = true;
 		}
 		
@@ -304,21 +289,15 @@ public class SettingsFrame extends JFrame{
 		if(newPeersJson.size() != peersJson.size())
 		{
 			try {
-		        Writer writer = new JSonWriter();
-		        
-		        JSONObject jsonObject = new JSONObject();
+    	        JSONObject jsonObject = new JSONObject();
 		        jsonObject.put("knownpeers", newPeersJson);
 		        
-		        jsonObject.writeJSONString(writer);
-					
-				FileWriter file = new FileWriter(Settings.getInstance().getCurrentPeersPath());
-				file.write(writer.toString());
-				file.flush();
-				file.close();
+				SaveStrToFile.saveJsonFine(Settings.getInstance().getPeersPath(), jsonObject);			
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 				JOptionPane.showMessageDialog(
-						new JFrame(), "Error writing to the file: " + Settings.getInstance().getCurrentPeersPath()
+						new JFrame(), "Error writing to the file: " + Settings.getInstance().getPeersPath()
 								+ "\nProbably there is no access.",
 		                "Error!",
 		                JOptionPane.ERROR_MESSAGE);
@@ -357,17 +336,11 @@ public class SettingsFrame extends JFrame{
 		}
 		
 		try {
-	        Writer writer = new JSonWriter();
-	        settingsJSONbuf.writeJSONString(writer);
-				
-			FileWriter file = new FileWriter(Settings.getInstance().getCurrentSettingsPath());
-			file.write(writer.toString());
-			file.flush();
-			file.close();
+			SaveStrToFile.saveJsonFine(Settings.getInstance().getSettingsPath(), settingsJSONbuf);			
 		} catch (IOException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(
-					new JFrame(), "Error writing to the file: " + Settings.getInstance().getCurrentSettingsPath()
+					new JFrame(), "Error writing to the file: " + Settings.getInstance().getSettingsPath()
 							+ "\nProbably there is no access.",
 	                "Error!",
 	                JOptionPane.ERROR_MESSAGE);
