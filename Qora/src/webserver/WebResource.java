@@ -42,6 +42,7 @@ import javax.ws.rs.core.UriInfo;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.log4j.Logger;
 import org.eclipse.jetty.util.StringUtil;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -65,6 +66,7 @@ import qora.blockexplorer.BlockExplorer;
 import qora.crypto.Base58;
 import qora.crypto.Base64;
 import qora.naming.Name;
+import qora.payment.Payment;
 import qora.transaction.ArbitraryTransaction;
 import qora.transaction.Transaction;
 import qora.web.BlogBlackWhiteList;
@@ -96,6 +98,8 @@ public class WebResource {
 	@Context
 	HttpServletRequest request;
 
+	
+	private static final Logger LOGGER = Logger.getLogger(WebResource.class);
 	@GET
 	public Response Default() {
 
@@ -136,7 +140,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -188,7 +192,7 @@ public class WebResource {
 
 			return Response.ok(content, "text/html; charset=utf-8").build();
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -213,7 +217,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -309,7 +313,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -328,7 +332,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -381,7 +385,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -397,7 +401,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -417,7 +421,7 @@ public class WebResource {
 			return enhanceAndShowWebsite(website);
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -545,7 +549,7 @@ public class WebResource {
 					.entity(json.toJSONString()).build();
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 		}
 
 		return null;
@@ -637,7 +641,7 @@ public class WebResource {
 				}
 
 			} catch (Throwable e) {
-				e.printStackTrace();
+				LOGGER.error(e.getMessage(),e);
 			}
 
 			if (storageJsonObject == null) {
@@ -735,7 +739,7 @@ public class WebResource {
 
 			try {
 
-				profile.saveProfile();
+				profile.saveProfile(null);
 
 				json.put("type", "settingsSuccessfullySaved");
 				return Response
@@ -758,7 +762,7 @@ public class WebResource {
 			}
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			json.put("type", "error");
 			json.put("error", e.getMessage());
@@ -802,7 +806,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -864,7 +868,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -915,7 +919,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (PebbleException e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return Response.status(404).build();
 		}
 	}
@@ -1126,6 +1130,18 @@ public class WebResource {
 		}
 	}
 
+	@Path("index/libs/js/clipboard.js")
+	@GET
+	public Response clipboard() {
+		File file = new File("web/libs/js/clipboard.js");
+
+		if (file.exists()) {
+			return Response.ok(file, "text/javascript").build();
+		} else {
+			return error404(request, null);
+		}
+	}
+
 	@Path("index/libs/js/third-party/ZeroClipboard.min.js")
 	@GET
 	public Response ZeroClipboardmin() {
@@ -1137,7 +1153,7 @@ public class WebResource {
 			return error404(request, null);
 		}
 	}
-
+	
 	@Path("index/libs/js/third-party/ZeroClipboard.swf")
 	@GET
 	public Response ZeroClipboard() {
@@ -1408,7 +1424,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -1485,7 +1501,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -1566,7 +1582,7 @@ public class WebResource {
 							try {
 
 								activeProfileOpt.addFollowedBlog(blogname);
-								result = activeProfileOpt.saveProfile();
+								result = activeProfileOpt.saveProfile(null);
 								result = "<div class=\"alert alert-success\" role=\"alert\">You follow this blog now<br>"
 										+ result + "</div>";
 
@@ -1607,7 +1623,7 @@ public class WebResource {
 							activeProfileOpt.removeFollowedBlog(blogname);
 							String result;
 							try {
-								result = activeProfileOpt.saveProfile();
+								result = activeProfileOpt.saveProfile(null);
 								result = "<div class=\"alert alert-success\" role=\"alert\">Unfollow successful<br>"
 										+ result + "</div>";
 
@@ -1643,7 +1659,7 @@ public class WebResource {
 
 			return getBlog(null);
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return Response.status(200)
 					.header("Content-Type", "application/json; charset=utf-8")
 					.entity("{}").build();
@@ -1749,7 +1765,7 @@ public class WebResource {
 					.entity(jsonanswer.toJSONString()).build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			jsonanswer.put("type", "deleteError");
 			jsonanswer.put("errordetail", e.getMessage());
@@ -1878,7 +1894,7 @@ public class WebResource {
 					.entity(jsonanswer.toJSONString()).build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			jsonanswer.put("type", "deleteError");
 			jsonanswer.put("errordetail", e.getMessage());
@@ -1983,7 +1999,7 @@ public class WebResource {
 			}
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			json.put("type", "error");
 			json.put("error", e.getMessage());
@@ -2062,7 +2078,15 @@ public class WebResource {
 						activeProfileOpt.addLikePost(signature);
 						try {
 
-							result = activeProfileOpt.saveProfile();
+							String creator = blogEntryOpt.getCreator();
+							List<Payment> payments = new ArrayList<>();
+							if(creator != null)
+							{
+								BigDecimal amount = BigDecimal.TEN;
+								amount = amount.setScale(8);
+								payments.add(new Payment(new Account(creator), 0L,amount ));
+							}
+							result = activeProfileOpt.saveProfile(payments);
 
 							json.put("type", "LikeSuccessful");
 							json.put("result", result);
@@ -2085,7 +2109,7 @@ public class WebResource {
 							activeProfileOpt.removeLikeProfile(signature);
 							String result;
 							try {
-								result = activeProfileOpt.saveProfile();
+								result = activeProfileOpt.saveProfile(null);
 
 								json.put("type", "LikeRemovedSuccessful");
 								json.put("result", result);
@@ -2109,7 +2133,7 @@ public class WebResource {
 			}
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			json.put("type", "error");
 			json.put("error", e.getMessage());
@@ -2170,7 +2194,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -2241,7 +2265,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -2316,7 +2340,7 @@ public class WebResource {
 					"text/html; charset=utf-8").build();
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -2426,7 +2450,7 @@ public class WebResource {
 			return Response.ok(pebbleHelper.evaluate(),
 					"text/html; charset=utf-8").build();
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}
@@ -3000,6 +3024,31 @@ public class WebResource {
 		}
 	}
 	
+	@Path("index/translation.json")
+	@GET
+	public Response translationjson() {
+		
+		File file = new File("languages/" + Settings.getInstance().getLang());
+		
+		if (file.exists()) {
+			return Response.ok(file, "application/json").build();
+		} else {
+			return error404(request, null);
+		}
+	}
+	
+	@Path("index/libs/js/translation.js")
+	@GET
+	public Response translationjs() {
+		File file = new File("web/libs/js/translation.js");
+
+		if (file.exists()) {
+			return Response.ok(file, "text/javascript").build();
+		} else {
+			return error404(request, null);
+		}
+	}
+	
 	public Response error404(HttpServletRequest request, String titleOpt) {
 
 		try {
@@ -3015,7 +3064,7 @@ public class WebResource {
 					.header("Content-Type", "text/html; charset=utf-8")
 					.entity(pebbleHelper.evaluate()).build();
 		} catch (PebbleException e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return Response.status(404).build();
 		}
 	}
@@ -3060,7 +3109,7 @@ public class WebResource {
 			}
 
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 
@@ -3071,7 +3120,7 @@ public class WebResource {
 			return readFile("web/main.mini.html", StandardCharsets.UTF_8);
 
 		} catch (IOException e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return "ERROR";
 		}
 	}
@@ -3097,7 +3146,7 @@ public class WebResource {
 				try {
 					return error404(request, "This key is empty");
 				} catch (Throwable e) {
-					e.printStackTrace();
+					LOGGER.error(e.getMessage(),e);
 					return error404(request, null);
 				}
 
@@ -3105,7 +3154,7 @@ public class WebResource {
 
 			return enhanceAndShowWebsite(website);
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(), e);
 			return error404(request, null);
 		}
 	}
@@ -3131,7 +3180,7 @@ public class WebResource {
 							request,
 							"This name has currently no <a href=\"/index/namestorage.html\">website<a/>!");
 				} catch (Throwable e) {
-					e.printStackTrace();
+					LOGGER.error(e.getMessage(),e);
 					return error404(request, null);
 				}
 
@@ -3139,7 +3188,7 @@ public class WebResource {
 
 			return enhanceAndShowWebsite(website);
 		} catch (Throwable e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			return error404(request, null);
 		}
 	}

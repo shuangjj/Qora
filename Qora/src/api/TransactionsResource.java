@@ -14,6 +14,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -32,6 +33,10 @@ import utils.Pair;
 @Produces(MediaType.APPLICATION_JSON)
 public class TransactionsResource {
 
+	
+	private static final Logger LOGGER = Logger
+			.getLogger(TransactionsResource.class);
+	
 	@Context
 	HttpServletRequest request;
 
@@ -189,6 +194,23 @@ public class TransactionsResource {
 		
 		for(Transaction transaction: transactions)
 		{
+			array.add(transaction.toJson());
+		}
+		
+		return array.toJSONString();
+	}
+	
+	@SuppressWarnings("unchecked")
+	@GET
+	@Path("/unconfirmedof/{address}")
+	public String getNetworkTransactions(@PathParam("address") String address)
+	{
+		List<Transaction> transactions = Controller.getInstance().getUnconfirmedTransactions();
+		JSONArray array = new JSONArray();
+		
+		for(Transaction transaction: transactions)
+		{
+			if(transaction.getCreator().getAddress().equals(address))
 			array.add(transaction.toJson());
 		}
 		
@@ -355,16 +377,10 @@ public class TransactionsResource {
 			//RETURN
 			return json.toJSONString();
 		}
-		catch(NullPointerException e)
+		catch(NullPointerException | ClassCastException e)
 		{
 			//JSON EXCEPTION
-			e.printStackTrace();
-			throw ApiErrorFactory.getInstance().createError(ApiErrorFactory.ERROR_JSON);
-		}
-		catch(ClassCastException e)
-		{
-			//JSON EXCEPTION
-			e.printStackTrace();
+			LOGGER.info(e);
 			throw ApiErrorFactory.getInstance().createError(ApiErrorFactory.ERROR_JSON);
 		}
 	}

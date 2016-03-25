@@ -27,6 +27,8 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
+import org.apache.log4j.Logger;
+
 import qora.account.Account;
 import qora.account.PrivateKeyAccount;
 import qora.assets.Asset;
@@ -39,6 +41,8 @@ import controller.Controller;
 @SuppressWarnings("serial")
 public class OrderPanel extends JPanel
 {
+	
+	private static final Logger LOGGER = Logger.getLogger(OrderPanel.class);
 	private Asset have;
 	private Asset want;
 	private JButton sellButton;
@@ -64,7 +68,7 @@ public class OrderPanel extends JPanel
 		GridBagConstraints superhintGBC = new GridBagConstraints();
 		superhintGBC.insets = new Insets(0, 5, 5, 0);
 		superhintGBC.fill = GridBagConstraints.BOTH;   
-		superhintGBC.anchor = GridBagConstraints.SOUTHWEST;;
+		superhintGBC.anchor = GridBagConstraints.SOUTHWEST;
 		superhintGBC.gridx = 0;
 		superhintGBC.gridwidth = 3;
 		superhintGBC.weightx = superhintGBC.weighty = 1.0;
@@ -502,7 +506,7 @@ public class OrderPanel extends JPanel
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 			
 			if(parse == 0)
 			{

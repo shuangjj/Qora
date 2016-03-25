@@ -12,6 +12,8 @@ import java.util.Map;
 import java.util.Observable;
 import java.util.Observer;
 
+import org.apache.log4j.Logger;
+
 import ntp.NTP;
 import qora.account.PrivateKeyAccount;
 import qora.block.Block;
@@ -40,6 +42,7 @@ public class BlockGenerator extends Thread implements Observer
 	public static final int MIN_BLOCK_TIME = 1 * 60;
 	public static final int MAX_BLOCK_TIME = 5 * 60;
 	
+	private static final Logger LOGGER = Logger.getLogger(BlockGenerator.class);
 	
 	public enum ForgingStatus {
 	    
@@ -76,7 +79,7 @@ public class BlockGenerator extends Thread implements Observer
 	private List<PrivateKeyAccount> cachedAccounts;
 	
 	private ForgingStatus forgingStatus = ForgingStatus.FORGING_DISABLED;
-	private boolean walletOnceUnlocked = false;;
+	private boolean walletOnceUnlocked = false;
 	
 	
 	public BlockGenerator()
@@ -252,7 +255,7 @@ public class BlockGenerator extends Thread implements Observer
 					} 
 					catch (InterruptedException e) 
 					{
-						e.printStackTrace();
+						LOGGER.error(e.getMessage(),e);
 					}
 				}
 			}
@@ -265,7 +268,7 @@ public class BlockGenerator extends Thread implements Observer
 				} 
 				catch (InterruptedException e) 
 				{
-					e.printStackTrace();
+					LOGGER.error(e.getMessage(),e);
 				}
 			}
 		}
@@ -422,7 +425,7 @@ public class BlockGenerator extends Thread implements Observer
 							}
 						}
 					}catch(Exception e){
-                        e.printStackTrace();
+						LOGGER.error(e.getMessage(),e);
                         //REMOVE FROM LIST
                         orderedTransactions.remove(transaction);
                         transactionProcessed = true;

@@ -27,7 +27,6 @@ import java.util.Observer;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.logging.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.swing.JOptionPane;
@@ -35,6 +34,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.log4j.Logger;
 import org.mapdb.Fun.Tuple2;
 
 import com.google.common.primitives.Longs;
@@ -89,8 +89,9 @@ import webserver.WebService;
 
 public class Controller extends Observable {
 
-	private String version = "0.25.1";//private String version = "0.26.0 beta";
-	private String buildTime = "2016-03-10 00:00:00 UTC";
+	private static final Logger LOGGER = Logger.getLogger(Controller.class);
+	private String version = "0.26.0 beta";
+	private String buildTime = "2016-03-24 00:00:00 UTC";
 	private long buildTimestamp;
 	
 	public static final String releaseVersion = "0.26.0";
@@ -162,7 +163,7 @@ public class Controller extends Observable {
 		        	try {
 						date = (Date)formatter.parse(this.buildTime);
 					} catch (ParseException e) {
-						e.printStackTrace();
+						LOGGER.error(e.getMessage(),e);
 					}
 		        }
 		    }
@@ -186,7 +187,7 @@ public class Controller extends Observable {
 	
 	public void statusInfo()
 	{
-		Logger.getGlobal().info(
+		LOGGER.info(
 			"STATUS OK\n" 
 			+ "| Last Block Signature: " + Base58.encode(this.blockChain.getLastBlock().getSignature()) + "\n"
 			+ "| Last Block Height: " + this.blockChain.getLastBlock().getHeight() + "\n"
@@ -287,7 +288,7 @@ public class Controller extends Observable {
 		// CHECK WEB PORT AVAILABLE
 		if (Settings.getInstance().isWebEnabled()) {
 			if (!Network.isPortAvailable(Settings.getInstance().getWebPort())) {	
-				System.out.println(Lang.getInstance().translate("Web port %port% already in use!").
+				LOGGER.error(Lang.getInstance().translate("Web port %port% already in use!").
 						replace("%port%", String.valueOf(Settings.getInstance().getWebPort())));
 			}
 		}
@@ -311,8 +312,8 @@ public class Controller extends Observable {
 		try {
 			DBSet.getInstance();
 		} catch (Throwable e) {
-			e.printStackTrace();
-			System.out.println(Lang.getInstance().translate("Error during startup detected trying to restore backup database..."));
+			LOGGER.error(e.getMessage(),e);
+			LOGGER.info(Lang.getInstance().translate("Error during startup detected trying to restore backup database..."));
 			reCreateDB();
 		}
 
@@ -322,7 +323,7 @@ public class Controller extends Observable {
 			try {
 				DBSet.getInstance().close();
 			} catch (Throwable e) {
-				e.printStackTrace();
+				LOGGER.error(e.getMessage(),e);
 			}
 			reCreateDB();
 		}
@@ -454,11 +455,11 @@ public class Controller extends Observable {
 			if (useDataBak && dataBak.exists()
 					&& Settings.getInstance().isCheckpointingEnabled()) {
 				FileUtils.copyDirectory(dataBak, dataDir);
-				System.out.println(Lang.getInstance().translate("restoring backup database"));
+				LOGGER.info(Lang.getInstance().translate("restoring backup database"));
 				try {
 					DBSet.reCreateDatabase();
 				} catch (IOError e) {
-					e.printStackTrace();
+					LOGGER.error(e.getMessage(),e);
 					//backupdb is buggy too starting from scratch
 					if(dataDir.exists())
 					{
@@ -601,24 +602,24 @@ public class Controller extends Observable {
 			this.isStopping = true;
 
 			// STOP MESSAGE PROCESSOR
-			Logger.getGlobal().info(Lang.getInstance().translate("Stopping message processor"));
+			LOGGER.info(Lang.getInstance().translate("Stopping message processor"));
 			this.network.stop();
 
 			// STOP BLOCK PROCESSOR
-			Logger.getGlobal().info(Lang.getInstance().translate("Stopping block processor"));
+			LOGGER.info(Lang.getInstance().translate("Stopping block processor"));
 			this.synchronizer.stop();
 
 			// CLOSE DATABABASE
-			Logger.getGlobal().info(Lang.getInstance().translate("Closing database"));
+			LOGGER.info(Lang.getInstance().translate("Closing database"));
 			DBSet.getInstance().close();
 
 			// CLOSE WALLET
-			Logger.getGlobal().info(Lang.getInstance().translate("Closing wallet"));
+			LOGGER.info(Lang.getInstance().translate("Closing wallet"));
 			this.wallet.close();
 
 			createDataCheckpoint();
 
-			Logger.getGlobal().info(Lang.getInstance().translate("Closed."));
+			LOGGER.info(Lang.getInstance().translate("Closed."));
 			// FORCE CLOSE
 			System.exit(0);
 		}
@@ -640,13 +641,13 @@ public class Controller extends Observable {
 								dataBak.toPath(),
 								new SimpleFileVisitorForRecursiveFolderDeletion());
 					} catch (IOException e) {
-						e.printStackTrace();
+						LOGGER.error(e.getMessage(),e);
 					}
 				}
 				try {
 					FileUtils.copyDirectory(dataDir, dataBak);
 				} catch (IOException e) {
-					e.printStackTrace();
+					LOGGER.error(e.getMessage(),e);
 				}
 
 			}
@@ -874,7 +875,7 @@ public class Controller extends Observable {
 				// CHECK IF VALID
 				if (isNewBlockValid
 						&& this.synchronizer.process(block)) {
-					Logger.getGlobal().info(Lang.getInstance().translate("received new valid block"));
+					LOGGER.info(Lang.getInstance().translate("received new valid block"));
 
 					// PROCESS
 					// this.synchronizer.process(block);
@@ -1020,7 +1021,7 @@ public class Controller extends Observable {
 				this.synchronizer.synchronize(peer);
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			LOGGER.error(e.getMessage(),e);
 
 			if (peer != null) {
 				// DISHONEST PEER
@@ -1119,7 +1120,7 @@ public class Controller extends Observable {
 	public boolean recoverWallet(byte[] seed, String password, int amount) {
 		if(this.wallet.create(seed, password, amount, false))
 		{
-			Logger.getGlobal().info(Lang.getInstance().translate("Wallet needs to synchronize!"));
+			LOGGER.info(Lang.getInstance().translate("Wallet needs to synchronize!"));
 			this.actionAfterConnect();
 			this.setNeedSync(true);
 

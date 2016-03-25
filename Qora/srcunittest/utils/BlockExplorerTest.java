@@ -159,7 +159,6 @@ public class BlockExplorerTest {
 		int start = -1;
 		int txOnPage = 10;
 		String filter = "standart";
-		boolean withoutBlocks = false;
 		boolean allOnOnePage = false;
 		String showOnly = "";
 		String showWithout = "";
@@ -169,39 +168,38 @@ public class BlockExplorerTest {
 		for(int i = 0; i < addrs.size(); i++) {
 			
 			String addr = addrs.get(i);
-		
-			Map<Object, Map> output = BlockExplorer.getInstance().jsonQueryAddress(addrs, start, txOnPage, filter, allOnOnePage, showOnly, showWithout);
+			List<String> listaddr = new ArrayList<>();
+			listaddr.add(addr);
+			
+			Map<Object, Map> output = BlockExplorer.getInstance().jsonQueryAddress(listaddr, start, txOnPage, filter, allOnOnePage, showOnly, showWithout);
 	
-			Map<Object, Map> totalBalance = output.get("totalBalance");
+			Map<Long, String> totalBalance = (Map<Long, String>) output.get("balance").get("total");
 			
 			Account account = new Account(addr);
 			
 			System.out.println(addr);
-			for(Map.Entry<Object, Map> e : totalBalance.entrySet())
+			for(Map.Entry<Long, String> e : totalBalance.entrySet())
 			{
-				if(e.getKey() instanceof Long)
+				Long key = e.getKey();
+				
+				BigDecimal blockExplorerBalance =  new BigDecimal(e.getValue());
+				
+				System.out.print("(" + key + ") " + " BlockExplorerBalance: " + blockExplorerBalance);
+				
+				BigDecimal nativeBalance = account.getConfirmedBalance(key);
+				
+				System.out.print("; NantiveBalance: " + nativeBalance);
+				
+				if(blockExplorerBalance.equals(nativeBalance))
 				{
-					Long key = (Long) e.getKey();
-					
-					BigDecimal blockExplorerBalance =  new BigDecimal((String) e.getValue().get("amount"));
-					
-					System.out.print("(" + key + ") " + e.getValue().get("assetName") + " BlockExplorerBalance: " + blockExplorerBalance);
-					
-					BigDecimal nativeBalance = account.getConfirmedBalance(key);
-					
-					System.out.print("; NantiveBalance: " + nativeBalance);
-					
-					if(blockExplorerBalance.equals(nativeBalance))
-					{
-						System.out.println(" OK.");
-					}
-					else
-					{
-						System.out.println(" Fail!!!");
-					}
-					
-					assertEquals(blockExplorerBalance, nativeBalance);
+					System.out.println(" OK.");
 				}
+				else
+				{
+					System.out.println(" Fail!!!");
+				}
+				
+				assertEquals(blockExplorerBalance, nativeBalance);
 			}
 		}
 		
@@ -239,7 +237,7 @@ public class BlockExplorerTest {
 
 		List<Object> all = new ArrayList<Object>();
 
-		List<Transaction> transactions = new ArrayList<Transaction>();;
+		List<Transaction> transactions = new ArrayList<Transaction>();
 		for (int type = 1; type <= 23; type++) {  // 17 - The number of transaction types. 23 - for the future
 			transactions.addAll(DBSet.getInstance().getTransactionFinalMap().getTransactionsByTypeAndAddress("QPVknSmwDryB98Hh8xB7E6U75dGFYwNkJ4", type, 0));
 		}
@@ -260,7 +258,7 @@ public class BlockExplorerTest {
 		all.clear();
 		stopwatchAll = new Stopwatch();
 		
-		transactions = new ArrayList<Transaction>();;
+		transactions = new ArrayList<Transaction>();
 		for (int type = 1; type <= 23; type++) {  // 17 - The number of transaction types. 23 - for the future
 			transactions.addAll(DBSet.getInstance().getTransactionFinalMap().getTransactionsByTypeAndAddress("QYsLsfwMRBPnunmuWmFkM4hvGsfooY8ssU", type, 0));
 		}
@@ -283,7 +281,7 @@ public class BlockExplorerTest {
 		
 		stopwatchAll = new Stopwatch();
 		
-		transactions = new ArrayList<Transaction>();;
+		transactions = new ArrayList<Transaction>();
 		for (int type = 1; type <= 23; type++) {  // 17 - The number of transaction types. 23 - for the future
 			transactions.addAll(DBSet.getInstance().getTransactionFinalMap().getTransactionsByTypeAndAddress("QRZ5Ggk6o5wwEgzL4Wo3xmueXuDEgwLeyQ", type, 0));
 		}

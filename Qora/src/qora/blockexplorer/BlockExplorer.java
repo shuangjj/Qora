@@ -20,6 +20,7 @@ import java.util.TreeSet;
 
 import javax.ws.rs.core.UriInfo;
 
+import org.apache.log4j.Logger;
 import org.mapdb.Fun;
 import org.mapdb.Fun.Tuple2;
 import org.mapdb.Fun.Tuple6;
@@ -30,6 +31,7 @@ import controller.Controller;
 import database.BalanceMap;
 import database.DBSet;
 import database.SortableList;
+import lang.Lang;
 import qora.account.Account;
 import qora.assets.Asset;
 import qora.assets.Order;
@@ -68,6 +70,8 @@ import utils.ReverseComparator;
 @SuppressWarnings({ "unchecked", "rawtypes" })
 public class BlockExplorer
 {
+	
+	private static final Logger LOGGER = Logger.getLogger(BlockExplorer.class);
 	private static BlockExplorer blockExplorer;
 
 	public static BlockExplorer getInstance()
@@ -452,7 +456,7 @@ public class BlockExplorer
 		}
 		catch (Exception e)
 		{
-
+			LOGGER.error(e.getMessage(),e);
 		}
 
 		if (Crypto.getInstance().isValidAddress(query))
@@ -566,7 +570,7 @@ public class BlockExplorer
 			}
 			catch (Exception e) 
 			{
-
+				LOGGER.error(e.getMessage(),e);
 			}
 		}
 
@@ -1600,7 +1604,7 @@ public class BlockExplorer
 			
 			if(transaction.getType() == Transaction.MULTI_PAYMENT_TRANSACTION) 
 			{
-				Map<Long, BigDecimal> totalAmountOfAssets = new TreeMap<Long, BigDecimal>();;
+				Map<Long, BigDecimal> totalAmountOfAssets = new TreeMap<Long, BigDecimal>();
 
 				for (Payment payment : ((MultiPaymentTransaction)transaction).getPayments()) {
 					BigDecimal amount = BigDecimal.ZERO.setScale(8); 
@@ -1628,7 +1632,7 @@ public class BlockExplorer
 			
 			if(transaction.getType() == Transaction.ARBITRARY_TRANSACTION) 
 			{
-				Map<Long, BigDecimal> totalAmountOfAssets = new TreeMap<Long, BigDecimal>();;
+				Map<Long, BigDecimal> totalAmountOfAssets = new TreeMap<Long, BigDecimal>();
 
 				for (Payment payment : ((ArbitraryTransaction)transaction).getPayments()) {
 					BigDecimal amount = BigDecimal.ZERO.setScale(8); 
@@ -2022,9 +2026,11 @@ public class BlockExplorer
 	
 			for(Map.Entry<Tuple2<BigInteger, BigInteger>, Trade> trade : trades.entrySet())
 			{
-				Transaction tx = Controller.getInstance().getTransaction(trade.getValue().getInitiator().toByteArray());
+				Transaction txInitiator = Controller.getInstance().getTransaction(trade.getValue().getInitiator().toByteArray());
 				
-				all.add( new BlExpUnit(tx.getParent().getHeight(), tx.getSeq(), trade.getValue() ) );
+				Transaction txTarget = Controller.getInstance().getTransaction(trade.getValue().getTarget().toByteArray());
+				
+				all.add( new BlExpUnit(txInitiator.getParent().getHeight(), txTarget.getParent().getHeight(), txInitiator.getSeq(), txTarget.getSeq(), trade.getValue() ) );
 			}
 			
 			Set<BlExpUnit> atTransactions = DBSet.getInstance().getATTransactionMap().getBlExpATTransactionsByRecipient(address);
@@ -2035,7 +2041,7 @@ public class BlockExplorer
 		
 		if(size == 0)
 		{
-			output.put("error", "No transactions found for this address.<br>It has probably not been used on the network yet.");
+			output.put("error", Lang.getInstance().translate("No transactions found for this address.<br>It has probably not been used on the network yet."));
 			return output;
 		}
 		
@@ -2065,7 +2071,7 @@ public class BlockExplorer
 				Transaction tx = (Transaction)unit.getUnit();
 				tXincome = tx.getAssetAmount();
 				
-				if(addresses.contains(tx.getCreator().getAddress()))
+				if (tx.getCreator() != null && addresses.contains(tx.getCreator().getAddress()))
 				{
 					spentFee = spentFee.add(tx.getFee());
 				}
@@ -2637,8 +2643,11 @@ public class BlockExplorer
 		
 		for(Map.Entry<Tuple2<BigInteger, BigInteger>, Trade> trade : trades.entrySet())
 		{
-			Transaction tx = Controller.getInstance().getTransaction(trade.getValue().getInitiator().toByteArray());
-			all.add( new BlExpUnit(tx.getParent().getHeight(), tx.getParent().getTransactionSeq(tx.getSignature()), trade.getValue() ) );
+			Transaction txInitiator = Controller.getInstance().getTransaction(trade.getValue().getInitiator().toByteArray());
+			
+			Transaction txTarget = Controller.getInstance().getTransaction(trade.getValue().getTarget().toByteArray());
+			
+			all.add( new BlExpUnit(txInitiator.getParent().getHeight(), txTarget.getParent().getHeight(), txInitiator.getSeq(), txTarget.getSeq(), trade.getValue() ) );
 		}
 
 		int size = all.size();

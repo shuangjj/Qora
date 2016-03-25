@@ -1,19 +1,43 @@
+import gui.Gui;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Scanner;
 
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
 
-import api.ApiClient;
-import controller.Controller;
-import gui.Gui;
 import lang.Lang;
+
+import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
+
 import settings.Settings;
 import utils.SysTray;
+import api.ApiClient;
+import controller.Controller;
 
 public class Start {
+	
+	static Logger LOGGER = Logger.getLogger(Start.class.getName());
 
-	public static void main(String args[])
+	public static void main(String args[]) throws IOException
 	{	
+		
+		File log4j = new File("log4j.properties");
+		if(log4j.exists())
+		{
+			PropertyConfigurator.configure(log4j.getAbsolutePath());
+		}else
+		{
+			try( InputStream resourceAsStream = ClassLoader.class.getResourceAsStream("/log4j/log4j.default");)
+			{
+				PropertyConfigurator.configure(resourceAsStream);
+				LOGGER.error("log4j.properties not found, search path is " + log4j.getAbsolutePath() + " using default!");
+			}
+		}
+		
 		boolean cli = false;
 		
 		for(String arg: args)
@@ -37,13 +61,14 @@ public class Start {
 		{			
 			try
 			{
+				
 				//ONE MUST BE ENABLED
 				if(!Settings.getInstance().isGuiEnabled() && !Settings.getInstance().isRpcEnabled())
 				{
 					throw new Exception(Lang.getInstance().translate("Both gui and rpc cannot be disabled!"));
 				}
 				
-				System.out.println(Lang.getInstance().translate("Starting %qora% / version: %version% / build date: %builddate% / ...")
+				LOGGER.info(Lang.getInstance().translate("Starting %qora% / version: %version% / build date: %builddate% / ...")
 						.replace("%version%", Controller.getInstance().getVersion())
 						.replace("%builddate%", Controller.getInstance().getBuildDateString())
 						.replace("%qora%", Lang.getInstance().translate("Qora"))
@@ -60,22 +85,22 @@ public class Start {
 							SysTray.getInstance().createTrayIcon();
 						}
 				} catch(Exception e) {
-					System.out.println(Lang.getInstance().translate("GUI ERROR") + ": " + e.getMessage());
+					LOGGER.error(Lang.getInstance().translate("GUI ERROR") ,e);
 				}
 				
 			} catch(Exception e) {
 				
-				e.printStackTrace();
+				LOGGER.error(e.getMessage(),e);
 				
 				//USE SYSTEM STYLE
 		        try {
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 				} catch (Exception e2) {
-					e2.printStackTrace();
+					LOGGER.error(e2);
 				}
 				
 				//ERROR STARTING
-				System.out.println(Lang.getInstance().translate("STARTUP ERROR") + ": " + e.getMessage());
+				LOGGER.error(Lang.getInstance().translate("STARTUP ERROR") + ": " + e.getMessage());
 				
 				if(Gui.isGuiStarted())
 				{

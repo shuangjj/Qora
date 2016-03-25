@@ -1,7 +1,6 @@
 package api;
 
 import java.io.BufferedReader;
-import java.io.IOError;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -13,6 +12,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CopyOnWriteArrayList;
 
+import org.apache.log4j.Logger;
+
 import settings.Settings;
 import utils.StrJSonFine;
 
@@ -23,6 +24,9 @@ public class ApiClient {
 	public static final int SELF_CALL = 10;
 
 	private static List<String> allowedcalls = new CopyOnWriteArrayList<>();
+	
+	
+	private static final Logger LOGGER = Logger.getLogger(ApiClient.class);
 	
 	
 	String[] [] helpStrings =
@@ -125,6 +129,11 @@ public class ApiClient {
 			{
 				"GET transactions/network", 
 				"Returns an array of all the unconfirmed transactions known to the client.",
+				""
+			},
+			{
+				"GET transactions/unconfirmedof/<address>", 
+				"Returns an array of all the unconfirmed transactions of address known to the client.",
 				""
 			},
 			{
@@ -344,8 +353,13 @@ public class ApiClient {
 			},
 			{
 				"GET names/address/<address>", 
-				"Returns an array of all the names owned by a specific address in your wallet.",
-				"Errors: 102 - Invalid address. 201 - Wallet does not exist. 202 - Address does not exist in wallet."
+				"Returns an array of all the names owned by a specific address.",
+				"Errors: 102 - Invalid address."
+			},
+			{
+				"GET names/address/<address>/values", 
+				"Returns an array of all the names with values owned by a specific address.",
+				"Errors: 102 - Invalid address."
 			},
 			{
 				"GET names/<name>", 
@@ -741,15 +755,9 @@ public class ApiClient {
 			}
 			
 		}
-		catch(IOError ioe)
+		catch(Exception ioe)
 		{
-			//ioe.printStackTrace();	
-			return "Invalid command! \n" +
-				"Type help to get a list of commands.";
-		}
-		catch(Exception e)
-		{
-			//e.printStackTrace();	
+			LOGGER.info(ioe);	
 			return "Invalid command! \n" +
 				"Type help to get a list of commands.";
 		}

@@ -12,10 +12,14 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.logging.Logger;
+
+import lang.Lang;
+import network.Peer;
+import ntp.NTP;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.apache.log4j.Logger;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.JSONValue;
@@ -24,12 +28,11 @@ import com.google.common.base.Charsets;
 import com.google.common.io.Files;
 
 import controller.Controller;
-import lang.Lang;
-import network.Peer;
-import ntp.NTP;
 
 public class Settings {
 
+	
+	private static final Logger LOGGER = Logger.getLogger(Settings.class);
 	//NETWORK
 	private static final int DEFAULT_MIN_CONNECTIONS = 10;
 	private static final int DEFAULT_MAX_CONNECTIONS = 50;
@@ -83,7 +86,7 @@ public class Settings {
 	private static final boolean DEFAULT_NS_UPDATE = false;
 	private static final boolean DEFAULT_FORGING_ENABLED = true;
 	
-	private static String DEFAULT_LANGUAGE = "";
+	public static String DEFAULT_LANGUAGE = "en.json";
 	
 	private static Settings instance;
 	
@@ -120,12 +123,13 @@ public class Settings {
 		this.localAddress = this.getCurrentIp();
 		int alreadyPassed = 0;
 		
+		File file = new File("");
 		try
 		{
 			while(alreadyPassed<2)
 			{
 				//OPEN FILE
-				File file = new File(this.userPath + "settings.json");
+				file = new File(this.userPath + "settings.json");
 				
 				//CREATE FILE IF IT DOESNT EXIST
 				if(!file.exists())
@@ -143,6 +147,7 @@ public class Settings {
 				
 				//CREATE JSON OBJECT
 				this.settingsJSON = (JSONObject) JSONValue.parse(jsonString);
+				settingsJSON =	settingsJSON == null ? new JSONObject() : settingsJSON;
 				
 				alreadyPassed++;
 				
@@ -150,8 +155,9 @@ public class Settings {
 				{
 					this.userPath = (String) this.settingsJSON.get("userpath");
 					
-					if( !(this.userPath.endsWith("\\") || this.userPath.endsWith("/")) ) {
-						this.userPath += "/";
+					if (!(this.userPath.endsWith("\\") || this.userPath.endsWith("/")))
+					{
+						this.userPath += "/"; 
 					}
 				}
 				else
@@ -163,7 +169,8 @@ public class Settings {
 		catch(Exception e)
 		{
 			//STOP
-			System.out.println("ERROR reading settings.json. closing");
+			LOGGER.info("Error while reading/creating settings.json " + file.getAbsolutePath());
+			LOGGER.error(e.getMessage(),e);
 			System.exit(0);
 		}
 		
@@ -171,7 +178,7 @@ public class Settings {
 		try
 		{
 			//OPEN FILE
-			File file = new File(this.getPeersPath());
+			file = new File(this.getPeersPath());
 			
 			//CREATE FILE IF IT DOESNT EXIST
 			if(file.exists())
@@ -194,14 +201,15 @@ public class Settings {
 		catch(Exception e)
 		{
 			//STOP
-			System.out.println("ERROR reading peers.json.");
+			LOGGER.info("Error while reading peers.json " + file.getAbsolutePath());
+			LOGGER.error(e.getMessage(),e);
 			System.exit(0);
 		}
 	}
 	
 	public JSONObject Dump()
 	{
-		return settingsJSON;
+		return (JSONObject) settingsJSON.clone();
 	}
 	
 	public String getSettingsPath()
@@ -212,6 +220,26 @@ public class Settings {
 	public String getPeersPath()
 	{
 		return this.userPath + "peers.json";
+	}
+	
+	public String getWalletDir()
+	{
+		return this.getUserPath() + DEFAULT_WALLET_DIR;
+	}
+	
+	public String getDataDir()
+	{
+		return this.getUserPath() + DEFAULT_DATA_DIR;
+	}
+	
+	public String getLangDir()
+	{
+		return this.getUserPath() + "languages";
+	}
+	
+	public String getUserPath()
+	{
+		return this.userPath;
 	}
 	
 	public JSONArray getPeersJson()
@@ -249,7 +277,8 @@ public class Settings {
 					}
 				}
 			} catch (Exception e) {
-				Logger.getGlobal().info("Error with loading knownpeers from settings.json.");
+				LOGGER.error(e.getMessage(),e);
+				LOGGER.info("Error with loading knownpeers from settings.json.");
 			}
 			
 			try {
@@ -265,7 +294,8 @@ public class Settings {
 				}
 				
 			} catch (Exception e) {
-				Logger.getGlobal().info("Error with loading knownpeers from peers.json.");
+				LOGGER.error(e.getMessage(),e);
+				LOGGER.info("Error with loading knownpeers from peers.json.");
 			}
 			
 			knownPeers = getKnownPeersFromJSONArray(peersArray);
@@ -278,7 +308,8 @@ public class Settings {
 			return knownPeers;
 		
 		} catch (Exception e) {
-			Logger.getGlobal().info("Error in getKnownPeers().");
+			LOGGER.error(e.getMessage(),e);
+			LOGGER.info("Error in getKnownPeers().");
 			return new ArrayList<Peer>();
 		}
 	}
@@ -305,14 +336,15 @@ public class Settings {
 				}
 			}
 		
-			Logger.getGlobal().info(Lang.getInstance().translate("Peers loaded from Internet : ") + this.cacheInternetPeers.size());
+			LOGGER.info(Lang.getInstance().translate("Peers loaded from Internet : ") + this.cacheInternetPeers.size());
 
 			return this.cacheInternetPeers;
 			
 		} catch (Exception e) {
 			//RETURN EMPTY LIST
 
-			Logger.getGlobal().info(Lang.getInstance().translate("Peers loaded from Internet with errors : ") + this.cacheInternetPeers.size());
+			LOGGER.debug(e.getMessage(),e);
+			LOGGER.info(Lang.getInstance().translate("Peers loaded from Internet with errors : ") + this.cacheInternetPeers.size());
 						
 			return this.cacheInternetPeers;
 		}
@@ -347,7 +379,8 @@ public class Settings {
 					}
 				}catch(Exception e)
 				{
-					Logger.getGlobal().info((String) peersArray.get(i) + " - invalid peer address!");
+					LOGGER.debug(e.getMessage(),e);
+					LOGGER.info((String) peersArray.get(i) + " - invalid peer address!");
 				}
 			}
 			
@@ -575,25 +608,10 @@ public class Settings {
 				return ((Boolean) this.settingsJSON.get("forging")).booleanValue();
 			}
 		} catch (Exception e) {
-			System.err.println("Bad Settings.json content for parameter forging " + ExceptionUtils.getStackTrace(e));
+			LOGGER.error("Bad Settings.json content for parameter forging " + ExceptionUtils.getStackTrace(e));
 		}
 		
 		return DEFAULT_FORGING_ENABLED;
-	}
-	
-	public String getWalletDir()
-	{
-		return this.getUserPath() + DEFAULT_WALLET_DIR;
-	}
-	
-	public String getDataDir()
-	{
-		return this.getUserPath() + DEFAULT_DATA_DIR;
-	}
-	
-	public String getUserPath()
-	{
-		return this.userPath;
 	}
 	
 	public int getPingInterval()
